@@ -1,0 +1,18 @@
+.runtime/
+.claude/
+.beads/
+.logs/
+
+# Rust
+backend/target/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
