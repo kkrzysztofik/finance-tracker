@@ -5,7 +5,7 @@ use serde_json::json;
 
 #[derive(Debug)]
 pub enum AppError {
-    Database(sqlx::Error),
+    Database(sea_orm::DbErr),
     Csv(String),
     NotFound(String),
     BadRequest(String),
@@ -41,8 +41,8 @@ impl IntoResponse for AppError {
     }
 }
 
-impl From<sqlx::Error> for AppError {
-    fn from(e: sqlx::Error) -> Self {
+impl From<sea_orm::DbErr> for AppError {
+    fn from(e: sea_orm::DbErr) -> Self {
         Self::Database(e)
     }
 }

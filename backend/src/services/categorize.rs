@@ -1,7 +1,12 @@
 use reqwest::Client;
+use sea_orm::{
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    QueryOrder, QuerySelect, Set,
+};
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use tracing::info;
+
+use crate::entities::{categories, transactions};
 
 #[derive(Serialize)]
 struct ChatRequest {
@@ -50,22 +55,19 @@ pub struct CategorizeResult {
 }
 
 pub async fn categorize_uncategorized(
-    pool: &PgPool,
+    db: &DatabaseConnection,
     api_key: &str,
 ) -> Result<CategorizeResult, String> {
     let client = Client::new();
 
     // Fetch uncategorized transactions
-    let uncategorized: Vec<(i32, String, Option<String>, String)> = sqlx::query_as(
-        "SELECT id, description, counterparty, amount::text \
-         FROM transactions \
-         WHERE category_id IS NULL \
-         ORDER BY transaction_date DESC \
-         LIMIT 200",
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(|e| e.to_string())?;
+    let uncategorized = transactions::Entity::find()
+        .filter(transactions::Column::CategoryId.is_null())
+        .order_by_desc(transactions::Column::TransactionDate)
+        .limit(200)
+        .all(db)
+        .await
+        .map_err(|e| e.to_string())?;
 
     if uncategorized.is_empty() {
         return Ok(CategorizeResult {
@@ -76,15 +78,15 @@ pub async fn categorize_uncategorized(
     }
 
     // Fetch categories
-    let categories: Vec<(i32, String)> =
-        sqlx::query_as("SELECT id, name FROM categories ORDER BY name")
-            .fetch_all(pool)
-            .await
-            .map_err(|e| e.to_string())?;
+    let cats = categories::Entity::find()
+        .order_by_asc(categories::Column::Name)
+        .all(db)
+        .await
+        .map_err(|e| e.to_string())?;
 
-    let category_list: String = categories
+    let category_list: String = cats
         .iter()
-        .map(|(_, name)| name.as_str())
+        .map(|c| c.name.as_str())
         .collect::<Vec<_>>()
         .join(", ");
 
@@ -97,9 +99,9 @@ pub async fn categorize_uncategorized(
         let transactions_text: String = batch
             .iter()
             .enumerate()
-            .map(|(i, (_, desc, counterparty, amount))| {
-                let cp = counterparty.as_deref().unwrap_or("Unknown");
-                format!("{}: {} | {} | {}", i, desc, cp, amount)
+            .map(|(i, tx)| {
+                let cp = tx.counterparty.as_deref().unwrap_or("Unknown");
+                format!("{}: {} | {} | {}", i, tx.description, cp, tx.amount)
             })
             .collect::<Vec<_>>()
             .join("\n");
@@ -177,21 +179,18 @@ pub async fn categorize_uncategorized(
                 continue;
             }
 
-            let tx_id = batch[assignment.index].0;
+            let tx = &batch[assignment.index];
 
             // Find category ID by name
-            if let Some((cat_id, _)) =
-                categories.iter().find(|(_, name)| name == &assignment.category)
-            {
-                sqlx::query(
-                    "UPDATE transactions SET category_id = $1, category_source = 'ai' \
-                     WHERE id = $2 AND category_id IS NULL",
-                )
-                .bind(cat_id)
-                .bind(tx_id)
-                .execute(pool)
-                .await
-                .map_err(|e| format!("Update error: {}", e))?;
+            if let Some(cat) = cats.iter().find(|c| c.name == assignment.category) {
+                let mut active: transactions::ActiveModel = tx.clone().into();
+                active.category_id = Set(Some(cat.id));
+                active.category_source = Set(Some("ai".to_string()));
+
+                active
+                    .update(db)
+                    .await
+                    .map_err(|e| format!("Update error: {}", e))?;
 
                 categorized += 1;
             } else {

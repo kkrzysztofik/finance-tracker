@@ -1,18 +1,18 @@
 use axum::extract::State;
 use axum::Json;
-use sqlx::PgPool;
+use sea_orm::{DatabaseConnection, EntityTrait, QueryOrder};
 
+use crate::entities::categories;
 use crate::error::AppError;
 use crate::models::Category;
 
 pub async fn list(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
 ) -> Result<Json<Vec<Category>>, AppError> {
-    let categories = sqlx::query_as::<_, Category>(
-        "SELECT id, name, name_pl FROM categories ORDER BY name",
-    )
-    .fetch_all(&pool)
-    .await?;
+    let categories = categories::Entity::find()
+        .order_by_asc(categories::Column::Name)
+        .all(&db)
+        .await?;
 
     Ok(Json(categories))
 }

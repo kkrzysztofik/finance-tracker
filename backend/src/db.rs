@@ -1,18 +1,18 @@
-use sqlx::postgres::PgPoolOptions;
-use sqlx::PgPool;
+use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tracing::info;
 
-pub async fn create_pool(database_url: &str) -> Result<PgPool, sqlx::Error> {
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(database_url)
-        .await?;
+pub async fn create_pool(database_url: &str) -> Result<DatabaseConnection, sea_orm::DbErr> {
+    let mut opt = ConnectOptions::new(database_url);
+    opt.max_connections(10);
 
+    let db = Database::connect(opt).await?;
     info!("Connected to PostgreSQL");
-    Ok(pool)
+    Ok(db)
 }
 
-pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
+pub async fn run_migrations(db: &DatabaseConnection) -> Result<(), sea_orm::DbErr> {
+    use sea_orm::ConnectionTrait;
+
     let migrations = [
         include_str!("../migrations/001_initial_schema.sql"),
         include_str!("../migrations/002_seed_categories.sql"),
@@ -20,7 +20,7 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
 
     for (i, migration) in migrations.iter().enumerate() {
         info!("Running migration {}", i + 1);
-        sqlx::raw_sql(migration).execute(pool).await?;
+        db.execute_unprepared(migration).await?;
     }
 
     info!("All migrations completed");

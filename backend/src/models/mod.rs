@@ -1,5 +1,5 @@
-pub mod transaction;
 pub mod category;
+pub mod transaction;
 
-pub use transaction::Transaction;
 pub use category::Category;
+pub use transaction::Transaction;

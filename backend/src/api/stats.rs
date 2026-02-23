@@ -1,9 +1,14 @@
 use axum::extract::{Query, State};
 use axum::Json;
 use rust_decimal::Decimal;
+use sea_orm::{
+    ColumnTrait, Condition, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
+    QueryFilter, QueryOrder, QuerySelect, RelationTrait,
+};
+use sea_orm::sea_query::{Alias, Expr, Func, SimpleExpr};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgPool};
 
+use crate::entities::{accounts, categories, transactions};
 use crate::error::AppError;
 
 // --- Monthly ---
@@ -14,7 +19,7 @@ pub struct MonthlyParams {
     pub year: Option<i32>,
 }
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, FromQueryResult)]
 pub struct MonthlyRow {
     pub month: Option<String>,
     pub income: Option<Decimal>,
@@ -22,47 +27,51 @@ pub struct MonthlyRow {
 }
 
 pub async fn monthly(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
     Query(params): Query<MonthlyParams>,
 ) -> Result<Json<Vec<MonthlyRow>>, AppError> {
-    let mut conditions: Vec<String> = Vec::new();
-    let mut bind_idx = 0u32;
+    let mut condition = Condition::all();
 
-    if params.account.is_some() {
-        bind_idx += 1;
-        conditions.push(format!("a.name = ${bind_idx}"));
-    }
-    if params.year.is_some() {
-        bind_idx += 1;
-        conditions.push(format!("EXTRACT(YEAR FROM t.transaction_date) = ${bind_idx}"));
-    }
-
-    let where_clause = if conditions.is_empty() {
-        String::new()
-    } else {
-        format!("WHERE {}", conditions.join(" AND "))
-    };
-
-    let sql = format!(
-        "SELECT TO_CHAR(t.transaction_date, 'YYYY-MM') AS month, \
-         SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END) AS income, \
-         SUM(CASE WHEN t.amount < 0 THEN t.amount ELSE 0 END) AS expense \
-         FROM transactions t \
-         JOIN accounts a ON t.account_id = a.id \
-         {where_clause} \
-         GROUP BY month \
-         ORDER BY month"
-    );
-
-    let mut q = sqlx::query_as::<_, MonthlyRow>(&sql);
     if let Some(ref account) = params.account {
-        q = q.bind(account);
+        condition = condition.add(accounts::Column::Name.eq(account.as_str()));
     }
     if let Some(year) = params.year {
-        q = q.bind(year);
+        condition = condition.add(
+            Expr::cust_with_expr(
+                "EXTRACT(YEAR FROM $1)",
+                Expr::col((transactions::Entity, transactions::Column::TransactionDate)),
+            )
+            .eq(year),
+        );
     }
 
-    let rows = q.fetch_all(&pool).await?;
+    let month_expr = SimpleExpr::FunctionCall(
+        Func::cust(Alias::new("TO_CHAR")).args([
+            Expr::col((transactions::Entity, transactions::Column::TransactionDate)).into(),
+            Expr::val("YYYY-MM").into(),
+        ]),
+    );
+
+    let income_expr = Expr::cust(
+        "SUM(CASE WHEN transactions.amount > 0 THEN transactions.amount ELSE 0 END)",
+    );
+    let expense_expr = Expr::cust(
+        "SUM(CASE WHEN transactions.amount < 0 THEN transactions.amount ELSE 0 END)",
+    );
+
+    let rows = transactions::Entity::find()
+        .select_only()
+        .column_as(month_expr.clone(), "month")
+        .column_as(income_expr, "income")
+        .column_as(expense_expr, "expense")
+        .join(JoinType::InnerJoin, transactions::Relation::Account.def())
+        .filter(condition)
+        .group_by(month_expr)
+        .order_by_asc(Expr::cust("month"))
+        .into_model::<MonthlyRow>()
+        .all(&db)
+        .await?;
+
     Ok(Json(rows))
 }
 
@@ -75,7 +84,7 @@ pub struct CategoryParams {
     pub account: Option<String>,
 }
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, FromQueryResult)]
 pub struct CategoryRow {
     pub category: Option<String>,
     pub total: Option<Decimal>,
@@ -83,48 +92,39 @@ pub struct CategoryRow {
 }
 
 pub async fn by_category(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
     Query(params): Query<CategoryParams>,
 ) -> Result<Json<Vec<CategoryRow>>, AppError> {
-    let mut conditions: Vec<String> = vec!["t.amount < 0".into()];
-    let mut bind_idx = 0u32;
+    let mut condition = Condition::all()
+        .add(transactions::Column::Amount.lt(Decimal::ZERO));
 
-    if params.account.is_some() {
-        bind_idx += 1;
-        conditions.push(format!("a.name = ${bind_idx}"));
-    }
-    if params.date_from.is_some() {
-        bind_idx += 1;
-        conditions.push(format!("t.transaction_date >= ${bind_idx}::date"));
-    }
-    if params.date_to.is_some() {
-        bind_idx += 1;
-        conditions.push(format!("t.transaction_date <= ${bind_idx}::date"));
-    }
-
-    let where_clause = format!("WHERE {}", conditions.join(" AND "));
-
-    let sql = format!(
-        "SELECT c.name AS category, SUM(t.amount) AS total, COUNT(t.id) AS count \
-         FROM transactions t \
-         JOIN accounts a ON t.account_id = a.id \
-         LEFT JOIN categories c ON t.category_id = c.id \
-         {where_clause} \
-         GROUP BY c.name \
-         ORDER BY total ASC"
-    );
-
-    let mut q = sqlx::query_as::<_, CategoryRow>(&sql);
     if let Some(ref account) = params.account {
-        q = q.bind(account);
+        condition = condition.add(accounts::Column::Name.eq(account.as_str()));
     }
     if let Some(ref date_from) = params.date_from {
-        q = q.bind(date_from);
+        if let Ok(d) = chrono::NaiveDate::parse_from_str(date_from, "%Y-%m-%d") {
+            condition = condition.add(transactions::Column::TransactionDate.gte(d));
+        }
     }
     if let Some(ref date_to) = params.date_to {
-        q = q.bind(date_to);
+        if let Ok(d) = chrono::NaiveDate::parse_from_str(date_to, "%Y-%m-%d") {
+            condition = condition.add(transactions::Column::TransactionDate.lte(d));
+        }
     }
 
-    let rows = q.fetch_all(&pool).await?;
+    let rows = transactions::Entity::find()
+        .select_only()
+        .column_as(categories::Column::Name, "category")
+        .column_as(transactions::Column::Amount.sum(), "total")
+        .column_as(transactions::Column::Id.count(), "count")
+        .join(JoinType::InnerJoin, transactions::Relation::Account.def())
+        .join(JoinType::LeftJoin, transactions::Relation::Category.def())
+        .filter(condition)
+        .group_by(categories::Column::Name)
+        .order_by_asc(Expr::cust("total"))
+        .into_model::<CategoryRow>()
+        .all(&db)
+        .await?;
+
     Ok(Json(rows))
 }

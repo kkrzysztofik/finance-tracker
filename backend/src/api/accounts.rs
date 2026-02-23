@@ -1,11 +1,15 @@
 use axum::extract::State;
 use axum::Json;
+use sea_orm::{
+    ColumnTrait, DatabaseConnection, EntityTrait, FromQueryResult, JoinType, QueryOrder,
+    QuerySelect, RelationTrait,
+};
 use serde::Serialize;
-use sqlx::{FromRow, PgPool};
 
+use crate::entities::{accounts, transactions};
 use crate::error::AppError;
 
-#[derive(Debug, Serialize, FromRow)]
+#[derive(Debug, Serialize, FromQueryResult)]
 pub struct AccountWithCount {
     pub id: i32,
     pub name: String,
@@ -14,17 +18,22 @@ pub struct AccountWithCount {
 }
 
 pub async fn list(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
 ) -> Result<Json<Vec<AccountWithCount>>, AppError> {
-    let accounts = sqlx::query_as::<_, AccountWithCount>(
-        "SELECT a.id, a.name, a.currency, COUNT(t.id) AS transaction_count \
-         FROM accounts a \
-         LEFT JOIN transactions t ON t.account_id = a.id \
-         GROUP BY a.id, a.name, a.currency \
-         ORDER BY a.name",
-    )
-    .fetch_all(&pool)
-    .await?;
+    let accounts = accounts::Entity::find()
+        .select_only()
+        .column(accounts::Column::Id)
+        .column(accounts::Column::Name)
+        .column(accounts::Column::Currency)
+        .column_as(transactions::Column::Id.count(), "transaction_count")
+        .join(JoinType::LeftJoin, accounts::Relation::Transactions.def())
+        .group_by(accounts::Column::Id)
+        .group_by(accounts::Column::Name)
+        .group_by(accounts::Column::Currency)
+        .order_by_asc(accounts::Column::Name)
+        .into_model::<AccountWithCount>()
+        .all(&db)
+        .await?;
 
     Ok(Json(accounts))
 }

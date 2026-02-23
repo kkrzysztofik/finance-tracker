@@ -1,16 +1,16 @@
 use axum::extract::State;
 use axum::Json;
-use sqlx::PgPool;
+use sea_orm::DatabaseConnection;
 
 use crate::error::AppError;
 
 pub async fn categorize(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
 ) -> Result<Json<serde_json::Value>, AppError> {
     let api_key = std::env::var("OPENAI_API_KEY")
         .map_err(|_| AppError::BadRequest("OPENAI_API_KEY not configured".into()))?;
 
-    let result = crate::services::categorize::categorize_uncategorized(&pool, &api_key)
+    let result = crate::services::categorize::categorize_uncategorized(&db, &api_key)
         .await
         .map_err(AppError::Internal)?;
 

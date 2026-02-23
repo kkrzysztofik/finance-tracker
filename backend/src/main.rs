@@ -2,6 +2,7 @@ mod api;
 mod auth;
 mod config;
 mod db;
+mod entities;
 mod error;
 mod models;
 mod parsers;

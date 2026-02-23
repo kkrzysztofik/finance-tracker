@@ -1,5 +1,5 @@
 use axum::{middleware, Router};
-use sqlx::PgPool;
+use sea_orm::DatabaseConnection;
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::config::Config;
@@ -11,7 +11,7 @@ pub mod import;
 pub mod stats;
 pub mod transactions;
 
-pub fn create_router(pool: PgPool, config: Config) -> Router {
+pub fn create_router(pool: DatabaseConnection, config: Config) -> Router {
     let api = Router::new()
         .route("/api/transactions", axum::routing::get(transactions::list))
         .route(

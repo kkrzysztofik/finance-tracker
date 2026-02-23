@@ -1,7 +1,7 @@
 use axum::extract::{Multipart, State};
 use axum::Json;
+use sea_orm::DatabaseConnection;
 use serde::Serialize;
-use sqlx::PgPool;
 
 use crate::error::AppError;
 use crate::services;
@@ -14,7 +14,7 @@ pub struct ImportResponse {
 }
 
 pub async fn upload(
-    State(pool): State<PgPool>,
+    State(db): State<DatabaseConnection>,
     mut multipart: Multipart,
 ) -> Result<Json<ImportResponse>, AppError> {
     let field = multipart
@@ -36,7 +36,7 @@ pub async fn upload(
     let content = String::from_utf8(bytes.to_vec())
         .map_err(|e| AppError::BadRequest(format!("File is not valid UTF-8: {e}")))?;
 
-    let result = services::import::import_file(&pool, &filename, &content)
+    let result = services::import::import_file(&db, &filename, &content)
         .await
         .map_err(AppError::BadRequest)?;
 
