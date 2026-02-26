@@ -1,4 +1,6 @@
-# Finance Tracker – OpenCode Instructions
+# Finance Tracker – Agent Guidelines
+
+This document provides guidelines for AI coding agents working in the Finance Tracker codebase.
 
 ## Project Overview
 
@@ -52,17 +54,7 @@ npm run build  # Production build
 npm run dev    # Development server
 ```
 
-## Included Guidelines
-
-@.github/instructions/rust.instructions.md
-@.github/instructions/typescript.instructions.md
-@.github/instructions/security.instructions.md
-@.github/instructions/testing.instructions.md
-@.github/instructions/documentation.instructions.md
-@.github/instructions/performance.instructions.md
-@.github/instructions/code-review.instructions.md
-
-## Key Standards Summary
+## Key Standards
 
 ### Cross-cutting Concerns
 
@@ -98,39 +90,6 @@ npm run dev    # Development server
 - Validate all user inputs at API boundaries
 - Financial data must never be logged in plaintext
 - Authentication required on every protected route
-
-## Available Agents
-
-The following specialized agents are available in `.opencode/agents/`:
-
-| Agent | Description |
-|-------|-------------|
-| `coder` | Full-stack implementation (Rust + Next.js) |
-| `architect` | Architecture planning and design |
-| `reviewer` | Code review for security and quality |
-| `debugger` | Systematic bug investigation and fixing |
-| `qa` | Test planning and edge-case analysis |
-| `devops` | Docker, CI/CD, infrastructure |
-| `designer` | UX research and component design |
-| `postgresql-dba` | Database schema, migrations, indexes |
-| `technical-writer` | Documentation (Rustdoc, API docs, ADRs) |
-| `orchestrator` | Coordinate complex multi-agent tasks |
-
-## Available Commands
-
-The following commands are available in `.opencode/commands/`:
-
-| Command | Description |
-|---------|-------------|
-| `test-backend` | Run Rust backend tests |
-| `test-frontend` | Run frontend tests |
-| `build` | Run full build + lint checks |
-| `code-review` | Perform structured code review |
-| `debug-issue` | Debug a specific issue |
-| `generate-docs` | Generate/update documentation |
-| `setup-component` | Scaffold new module/component |
-| `write-tests` | Write tests for specified code |
-| `refactor-code` | Refactor while maintaining behavior |
 
 ---
 
