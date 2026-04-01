@@ -13,8 +13,9 @@ const AUTH_USER = process.env.NEXT_PUBLIC_AUTH_USER || "admin";
 const AUTH_PASS = process.env.NEXT_PUBLIC_AUTH_PASS || "admin";
 
 function authHeaders(): HeadersInit {
+  const auth = btoa(`${AUTH_USER}:${AUTH_PASS}`);
   return {
-    Authorization: `Basic ${btoa(`${AUTH_USER}:${AUTH_PASS}`)}`,
+    Authorization: `Basic ${auth}`,
     "Content-Type": "application/json",
   };
 }
@@ -78,10 +79,11 @@ export async function importFile(file: File): Promise<ImportResult> {
   const formData = new FormData();
   formData.append("file", file);
 
+  const auth = btoa(`${AUTH_USER}:${AUTH_PASS}`);
   const res = await fetch(`${API_BASE}/api/import`, {
     method: "POST",
     headers: {
-      Authorization: `Basic ${btoa(`${AUTH_USER}:${AUTH_PASS}`)}`,
+      Authorization: `Basic ${auth}`,
     },
     body: formData,
   });

@@ -32,7 +32,7 @@ const navItems = [
   { href: "/import", label: "Import", icon: Upload },
 ];
 
-function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarNav({ onNavigate }: { readonly onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (

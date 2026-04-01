@@ -18,7 +18,7 @@ services:
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgres://${DB_USER:-finance}:${DB_PASS:-finance}@db:5432/${DB_NAME:-finance}
+      DATABASE_URL: postgres://${DB_USER:-finance}:$${DB_PASS}@db:5432/${DB_NAME:-finance}
       BIND_ADDR: 0.0.0.0:3001
       AUTH_USER: ${AUTH_USER:-admin}
       AUTH_PASS: ${AUTH_PASS:-admin}

@@ -78,14 +78,14 @@ export default function ImportPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div
+          <button
             {...getRootProps()}
             className={`flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
               isDragActive
                 ? "border-primary bg-primary/5"
                 : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50"
             }`}
-            role="button"
+            type="button"
             aria-label="Drop zone for CSV files"
           >
             <input {...getInputProps()} />
@@ -110,7 +110,7 @@ export default function ImportPage() {
                 </p>
               </>
             )}
-          </div>
+          </button>
 
           {/* Selected file display */}
           {selectedFile && (

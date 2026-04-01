@@ -32,23 +32,19 @@ const formatPLN = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-interface CategoryPieChartProps {
-  data: CategoryStat[];
-}
-
 interface SliceData {
   name: string;
   value: number;
   count: number;
 }
 
-export function CategoryPieChart({ data }: CategoryPieChartProps) {
+export function CategoryPieChart({ data }: { readonly data: CategoryStat[] }) {
   // Only show expenses (negative totals), convert to absolute values
   const chartData: SliceData[] = data
-    .filter((d) => parseFloat(d.total) < 0)
+    .filter((d) => Number.parseFloat(d.total) < 0)
     .map((d) => ({
       name: d.category || "Uncategorized",
-      value: Math.abs(parseFloat(d.total)),
+      value: Math.abs(Number.parseFloat(d.total)),
       count: d.count,
     }))
     .sort((a, b) => b.value - a.value);
@@ -62,6 +58,9 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
   }
 
   const total = chartData.reduce((sum, d) => sum + d.value, 0);
+
+  const formatTooltip = (value: number | undefined) => [formatPLN(value ?? 0), "Amount"];
+  const formatLegend = (value: string) => <span className="text-xs">{value}</span>;
 
   return (
     <ResponsiveContainer width="100%" height={350}>
@@ -81,15 +80,15 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
           }}
           labelLine={{ strokeWidth: 1 }}
         >
-          {chartData.map((_, index) => (
+          {chartData.map((item, index) => (
             <Cell
-              key={`cell-${index}`}
+              key={`${item.name}-${index}`}
               fill={COLORS[index % COLORS.length]}
             />
           ))}
         </Pie>
         <Tooltip
-          formatter={(value: number | undefined) => [formatPLN(value ?? 0), "Amount"]}
+          formatter={formatTooltip}
           contentStyle={{
             borderRadius: "8px",
             border: "1px solid hsl(var(--border))",
@@ -101,9 +100,7 @@ export function CategoryPieChart({ data }: CategoryPieChartProps) {
           layout="vertical"
           align="right"
           verticalAlign="middle"
-          formatter={(value: string) => (
-            <span className="text-xs">{value}</span>
-          )}
+          formatter={formatLegend}
         />
       </PieChart>
     </ResponsiveContainer>

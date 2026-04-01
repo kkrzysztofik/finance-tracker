@@ -25,10 +25,6 @@ function formatMonth(monthStr: string): string {
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
-interface MonthlyBarChartProps {
-  data: MonthlyStat[];
-}
-
 interface ChartRow {
   month: string;
   label: string;
@@ -36,12 +32,12 @@ interface ChartRow {
   expense: number;
 }
 
-export function MonthlyBarChart({ data }: MonthlyBarChartProps) {
+export function MonthlyBarChart({ data }: { readonly data: MonthlyStat[] }) {
   const chartData: ChartRow[] = data.map((d) => ({
     month: d.month,
     label: formatMonth(d.month),
-    income: parseFloat(d.income),
-    expense: Math.abs(parseFloat(d.expense)),
+    income: Number.parseFloat(d.income),
+    expense: Math.abs(Number.parseFloat(d.expense)),
   }));
 
   if (chartData.length === 0) {

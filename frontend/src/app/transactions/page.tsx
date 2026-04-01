@@ -53,9 +53,9 @@ function CategoryCell({
   categories,
   onUpdate,
 }: {
-  transaction: Transaction;
-  categories: Category[];
-  onUpdate: (txId: number, categoryId: number) => void;
+  readonly transaction: Transaction;
+  readonly categories: Category[];
+  readonly onUpdate: (txId: number, categoryId: number) => void;
 }) {
   const [editing, setEditing] = useState(false);
 
@@ -206,7 +206,7 @@ function TransactionsContent() {
       <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
         {/* Account filter */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="account-filter" className="text-xs font-medium text-muted-foreground">
             Account
           </label>
           <Select
@@ -215,7 +215,7 @@ function TransactionsContent() {
               updateUrl({ account: value === "all" ? "" : value })
             }
           >
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger id="account-filter" className="w-[160px]">
               <SelectValue placeholder="All accounts" />
             </SelectTrigger>
             <SelectContent>
@@ -231,7 +231,7 @@ function TransactionsContent() {
 
         {/* Category filter */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="category-filter" className="text-xs font-medium text-muted-foreground">
             Category
           </label>
           <Select
@@ -240,7 +240,7 @@ function TransactionsContent() {
               updateUrl({ category: value === "all" ? "" : value })
             }
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger id="category-filter" className="w-[180px]">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
@@ -256,10 +256,11 @@ function TransactionsContent() {
 
         {/* Date from */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="date-from" className="text-xs font-medium text-muted-foreground">
             From
           </label>
           <Input
+            id="date-from"
             type="date"
             value={dateFrom}
             onChange={(e) => updateUrl({ date_from: e.target.value })}
@@ -270,10 +271,11 @@ function TransactionsContent() {
 
         {/* Date to */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="date-to" className="text-xs font-medium text-muted-foreground">
             To
           </label>
           <Input
+            id="date-to"
             type="date"
             value={dateTo}
             onChange={(e) => updateUrl({ date_to: e.target.value })}
@@ -284,10 +286,11 @@ function TransactionsContent() {
 
         {/* Search */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="search-filter" className="text-xs font-medium text-muted-foreground">
             Search
           </label>
           <Input
+            id="search-filter"
             type="text"
             placeholder="Counterparty or description..."
             value={search}
@@ -340,8 +343,11 @@ function TransactionsContent() {
               </TableRow>
             ) : (
               transactions.map((tx) => {
-                const amount = parseFloat(tx.amount);
+                const amount = Number.parseFloat(tx.amount);
                 const isExpense = amount < 0;
+                const amountColor = isExpense
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-green-600 dark:text-green-400";
                 const account = accounts.find((a) => a.id === tx.account_id);
 
                 return (
@@ -359,9 +365,7 @@ function TransactionsContent() {
                       {tx.description || "-"}
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-medium ${
-                        isExpense ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
-                      }`}
+                      className={`text-right font-mono font-medium ${amountColor}`}
                     >
                       {isExpense ? "" : "+"}
                       {amountFormatter.format(amount)}

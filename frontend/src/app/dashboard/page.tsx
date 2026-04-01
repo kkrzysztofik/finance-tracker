@@ -86,11 +86,11 @@ export default function DashboardPage() {
 
   // Calculate summary values from monthly stats
   const totalIncome = monthlyStats.reduce(
-    (sum, s) => sum + parseFloat(s.income),
+    (sum, s) => sum + Number.parseFloat(s.income),
     0
   );
   const totalExpense = monthlyStats.reduce(
-    (sum, s) => sum + parseFloat(s.expense),
+    (sum, s) => sum + Number.parseFloat(s.expense),
     0
   );
   const netBalance = totalIncome + totalExpense; // expense is already negative
