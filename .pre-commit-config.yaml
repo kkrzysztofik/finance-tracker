@@ -42,3 +42,21 @@ repos:
         entry: typos backend .github .pre-commit-config.yaml .typos.toml
         language: system
         pass_filenames: false
+
+      - id: frontend-format
+        name: frontend prettier
+        entry: bash -c 'cd frontend && npm run format:check'
+        language: system
+        pass_filenames: false
+
+      - id: frontend-lint
+        name: frontend eslint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        pass_filenames: false
+
+      - id: frontend-typecheck
+        name: frontend typecheck
+        entry: bash -c 'cd frontend && npm run typecheck'
+        language: system
+        pass_filenames: false

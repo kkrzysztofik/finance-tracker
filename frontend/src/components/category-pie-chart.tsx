@@ -59,8 +59,13 @@ export function CategoryPieChart({ data }: { readonly data: CategoryStat[] }) {
 
   const total = chartData.reduce((sum, d) => sum + d.value, 0);
 
-  const formatTooltip = (value: number | undefined) => [formatPLN(value ?? 0), "Amount"];
-  const formatLegend = (value: string) => <span className="text-xs">{value}</span>;
+  const formatTooltip = (value: number | undefined) => [
+    formatPLN(value ?? 0),
+    "Amount",
+  ];
+  const formatLegend = (value: string) => (
+    <span className="text-xs">{value}</span>
+  );
 
   return (
     <ResponsiveContainer width="100%" height={350}>

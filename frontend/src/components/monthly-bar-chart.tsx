@@ -50,7 +50,10 @@ export function MonthlyBarChart({ data }: { readonly data: MonthlyStat[] }) {
 
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+      <BarChart
+        data={chartData}
+        margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis
           dataKey="label"

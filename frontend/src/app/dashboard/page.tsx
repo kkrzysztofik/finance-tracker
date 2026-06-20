@@ -50,7 +50,9 @@ export default function DashboardPage() {
 
   // Load unfiltered monthly stats once (for year dropdown)
   useEffect(() => {
-    getMonthlyStats().then(setAllMonthlyStats).catch(() => {});
+    getMonthlyStats()
+      .then(setAllMonthlyStats)
+      .catch(() => {});
   }, []);
 
   // Fetch stats when filters change

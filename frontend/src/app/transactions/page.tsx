@@ -178,16 +178,22 @@ function TransactionsContent() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [accountFilter, categoryFilter, dateFrom, dateTo, search, currentPage, perPage]);
+  }, [
+    accountFilter,
+    categoryFilter,
+    dateFrom,
+    dateTo,
+    search,
+    currentPage,
+    perPage,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   const handleCategoryUpdate = async (txId: number, categoryId: number) => {
     try {
       const updated = await updateTransactionCategory(txId, categoryId);
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === txId ? updated : t))
-      );
+      setTransactions((prev) => prev.map((t) => (t.id === txId ? updated : t)));
     } catch (err) {
       console.error("Failed to update category:", err);
     }
@@ -206,7 +212,10 @@ function TransactionsContent() {
       <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
         {/* Account filter */}
         <div className="space-y-1">
-          <label htmlFor="account-filter" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="account-filter"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Account
           </label>
           <Select
@@ -231,7 +240,10 @@ function TransactionsContent() {
 
         {/* Category filter */}
         <div className="space-y-1">
-          <label htmlFor="category-filter" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="category-filter"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Category
           </label>
           <Select
@@ -256,7 +268,10 @@ function TransactionsContent() {
 
         {/* Date from */}
         <div className="space-y-1">
-          <label htmlFor="date-from" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="date-from"
+            className="text-xs font-medium text-muted-foreground"
+          >
             From
           </label>
           <Input
@@ -271,7 +286,10 @@ function TransactionsContent() {
 
         {/* Date to */}
         <div className="space-y-1">
-          <label htmlFor="date-to" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="date-to"
+            className="text-xs font-medium text-muted-foreground"
+          >
             To
           </label>
           <Input
@@ -286,7 +304,10 @@ function TransactionsContent() {
 
         {/* Search */}
         <div className="space-y-1">
-          <label htmlFor="search-filter" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor="search-filter"
+            className="text-xs font-medium text-muted-foreground"
+          >
             Search
           </label>
           <Input

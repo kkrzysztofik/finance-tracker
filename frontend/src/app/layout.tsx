@@ -36,7 +36,11 @@ function SidebarNav({ onNavigate }: { readonly onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1 px-3 py-4" role="navigation" aria-label="Main navigation">
+    <nav
+      className="flex flex-col gap-1 px-3 py-4"
+      role="navigation"
+      aria-label="Main navigation"
+    >
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive =
@@ -112,9 +116,7 @@ export default function RootLayout({
           </aside>
 
           {/* Main content */}
-          <main className="flex-1 md:pl-64">
-            {children}
-          </main>
+          <main className="flex-1 md:pl-64">{children}</main>
         </div>
       </body>
     </html>

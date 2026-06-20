@@ -91,9 +91,7 @@ export default function ImportPage() {
             <input {...getInputProps()} />
             <Upload
               className={`size-10 ${
-                isDragActive
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                isDragActive ? "text-primary" : "text-muted-foreground"
               }`}
             />
             {isDragActive ? (
@@ -158,12 +156,8 @@ export default function ImportPage() {
                   <Badge variant="secondary">
                     {result.total_rows} total rows
                   </Badge>
-                  <Badge variant="secondary">
-                    {result.imported} imported
-                  </Badge>
-                  <Badge variant="secondary">
-                    {result.skipped} skipped
-                  </Badge>
+                  <Badge variant="secondary">{result.imported} imported</Badge>
+                  <Badge variant="secondary">{result.skipped} skipped</Badge>
                 </div>
               </div>
             </div>
