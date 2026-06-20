@@ -1,0 +1,13 @@
+[profile.default]
+failure-output = "immediate-final"
+final-status-level = "flaky"
+retries = 0
+slow-timeout = { period = "60s", terminate-after = 2 }
+status-level = "slow"
+
+[profile.ci]
+fail-fast = false
+failure-output = "immediate-final"
+junit = { path = "target/nextest/junit.xml" }
+retries = 0
+slow-timeout = { period = "60s", terminate-after = 2 }

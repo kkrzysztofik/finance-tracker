@@ -1,11 +1,11 @@
 use axum::extract::{Query, State};
 use axum::Json;
 use rust_decimal::Decimal;
+use sea_orm::sea_query::{Alias, Expr, Func, SimpleExpr};
 use sea_orm::{
     ColumnTrait, Condition, DatabaseConnection, EntityTrait, FromQueryResult, JoinType,
     QueryFilter, QueryOrder, QuerySelect, RelationTrait,
 };
-use sea_orm::sea_query::{Alias, Expr, Func, SimpleExpr};
 use serde::{Deserialize, Serialize};
 
 use crate::entities::{accounts, categories, transactions};
@@ -45,19 +45,15 @@ pub async fn monthly(
         );
     }
 
-    let month_expr = SimpleExpr::FunctionCall(
-        Func::cust(Alias::new("TO_CHAR")).args([
-            Expr::col((transactions::Entity, transactions::Column::TransactionDate)).into(),
-            Expr::val("YYYY-MM").into(),
-        ]),
-    );
+    let month_expr = SimpleExpr::FunctionCall(Func::cust(Alias::new("TO_CHAR")).args([
+        Expr::col((transactions::Entity, transactions::Column::TransactionDate)).into(),
+        Expr::val("YYYY-MM").into(),
+    ]));
 
-    let income_expr = Expr::cust(
-        "SUM(CASE WHEN transactions.amount > 0 THEN transactions.amount ELSE 0 END)",
-    );
-    let expense_expr = Expr::cust(
-        "SUM(CASE WHEN transactions.amount < 0 THEN transactions.amount ELSE 0 END)",
-    );
+    let income_expr =
+        Expr::cust("SUM(CASE WHEN transactions.amount > 0 THEN transactions.amount ELSE 0 END)");
+    let expense_expr =
+        Expr::cust("SUM(CASE WHEN transactions.amount < 0 THEN transactions.amount ELSE 0 END)");
 
     let rows = transactions::Entity::find()
         .select_only()
@@ -95,8 +91,7 @@ pub async fn by_category(
     State(db): State<DatabaseConnection>,
     Query(params): Query<CategoryParams>,
 ) -> Result<Json<Vec<CategoryRow>>, AppError> {
-    let mut condition = Condition::all()
-        .add(transactions::Column::Amount.lt(Decimal::ZERO));
+    let mut condition = Condition::all().add(transactions::Column::Amount.lt(Decimal::ZERO));
 
     if let Some(ref account) = params.account {
         condition = condition.add(accounts::Column::Name.eq(account.as_str()));

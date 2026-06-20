@@ -6,9 +6,7 @@ use crate::entities::categories;
 use crate::error::AppError;
 use crate::models::Category;
 
-pub async fn list(
-    State(db): State<DatabaseConnection>,
-) -> Result<Json<Vec<Category>>, AppError> {
+pub async fn list(State(db): State<DatabaseConnection>) -> Result<Json<Vec<Category>>, AppError> {
     let categories = categories::Entity::find()
         .order_by_asc(categories::Column::Name)
         .all(&db)

@@ -1,0 +1,14 @@
+[files]
+extend-exclude = [
+  "backend/target",
+  "frontend/.next",
+  "frontend/node_modules",
+]
+
+[default.extend-words]
+adres = "adres"
+ADRES = "ADRES"
+Numer = "Numer"
+NUMER = "NUMER"
+produkt = "produkt"
+Produkt = "Produkt"

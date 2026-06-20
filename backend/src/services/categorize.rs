@@ -1,7 +1,7 @@
 use reqwest::Client;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
-    QueryOrder, QuerySelect, Set,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, QueryOrder,
+    QuerySelect, Set,
 };
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -204,9 +204,7 @@ pub async fn categorize_uncategorized(
         }
     }
 
-    info!(
-        "Categorization complete: {total} total, {categorized} categorized, {failed} failed"
-    );
+    info!("Categorization complete: {total} total, {categorized} categorized, {failed} failed");
     Ok(CategorizeResult {
         total,
         categorized,

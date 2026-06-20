@@ -1,0 +1,75 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - ".pre-commit-config.yaml"
+      - ".typos.toml"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+      - ".pre-commit-config.yaml"
+      - ".typos.toml"
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend Standards
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy, llvm-tools-preview
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Install cargo tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest,cargo-deny,cargo-audit,cargo-machete,cargo-llvm-cov,typos-cli
+
+      - name: Format
+        working-directory: backend
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: backend
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test
+        working-directory: backend
+        run: cargo nextest run --all-features --profile ci
+
+      - name: Coverage
+        working-directory: backend
+        run: cargo llvm-cov nextest --all-features --profile ci --fail-under-lines 0
+
+      - name: Dependency policy
+        working-directory: backend
+        run: cargo deny --config deny.toml check
+
+      - name: Security audit
+        working-directory: backend
+        run: cargo audit
+
+      - name: Unused dependencies
+        working-directory: backend
+        run: cargo machete
+
+      - name: Typos
+        run: typos backend .github .pre-commit-config.yaml .typos.toml

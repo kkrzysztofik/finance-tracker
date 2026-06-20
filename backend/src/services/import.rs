@@ -1,6 +1,6 @@
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set,
-    sea_query::OnConflict,
+    sea_query::OnConflict, ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait,
+    QueryFilter, Set,
 };
 use tracing::info;
 
@@ -98,7 +98,9 @@ pub async fn import_file(
         .await
         .map_err(|e| format!("Import log error: {}", e))?;
 
-    info!("Import complete: {total_rows} total, {imported} imported, {skipped} skipped (duplicates)");
+    info!(
+        "Import complete: {total_rows} total, {imported} imported, {skipped} skipped (duplicates)"
+    );
 
     Ok(ImportResult {
         total_rows,

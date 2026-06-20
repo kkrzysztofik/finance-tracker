@@ -52,7 +52,10 @@ pub fn detect_and_parse(filename: &str, content: &str) -> Result<Vec<ParsedTrans
         return alior::parse(content);
     }
 
-    if first_lines.contains("Data ksiegowania") || first_lines.contains("Data księgowania") || first_lines.contains("Kategoria") {
+    if first_lines.contains("Data ksiegowania")
+        || first_lines.contains("Data księgowania")
+        || first_lines.contains("Kategoria")
+    {
         tracing::info!("Detected Pekao format from content");
         return pekao::parse(content);
     }

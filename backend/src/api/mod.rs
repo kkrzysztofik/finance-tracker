@@ -30,8 +30,14 @@ pub fn create_router(pool: DatabaseConnection, config: Config) -> Router {
             "/api/stats/categories",
             axum::routing::get(stats::by_category),
         )
-        .route("/api/categorize", axum::routing::post(categorize::categorize))
-        .layer(middleware::from_fn_with_state(config, crate::auth::basic_auth))
+        .route(
+            "/api/categorize",
+            axum::routing::post(categorize::categorize),
+        )
+        .layer(middleware::from_fn_with_state(
+            config,
+            crate::auth::basic_auth,
+        ))
         .with_state(pool);
 
     let cors = CorsLayer::new()

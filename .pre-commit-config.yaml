@@ -1,0 +1,44 @@
+repos:
+  - repo: local
+    hooks:
+      - id: backend-fmt
+        name: backend cargo fmt
+        entry: bash -c 'cd backend && cargo fmt --check'
+        language: system
+        pass_filenames: false
+
+      - id: backend-clippy
+        name: backend cargo clippy
+        entry: bash -c 'cd backend && cargo clippy --all-targets --all-features -- -D warnings'
+        language: system
+        pass_filenames: false
+
+      - id: backend-test
+        name: backend cargo test
+        entry: bash -c 'cd backend && cargo test --all-features'
+        language: system
+        pass_filenames: false
+
+      - id: backend-deny
+        name: backend cargo deny
+        entry: bash -c 'cd backend && cargo deny --config deny.toml check'
+        language: system
+        pass_filenames: false
+
+      - id: backend-audit
+        name: backend cargo audit
+        entry: bash -c 'cd backend && cargo audit'
+        language: system
+        pass_filenames: false
+
+      - id: backend-machete
+        name: backend cargo machete
+        entry: bash -c 'cd backend && cargo machete'
+        language: system
+        pass_filenames: false
+
+      - id: typos
+        name: typos
+        entry: typos backend .github .pre-commit-config.yaml .typos.toml
+        language: system
+        pass_filenames: false

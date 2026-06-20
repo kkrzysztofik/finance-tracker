@@ -23,10 +23,7 @@ pub async fn upload(
         .map_err(|e| AppError::BadRequest(format!("Multipart error: {e}")))?
         .ok_or_else(|| AppError::BadRequest("No file provided".into()))?;
 
-    let filename = field
-        .file_name()
-        .unwrap_or("upload.csv")
-        .to_string();
+    let filename = field.file_name().unwrap_or("upload.csv").to_string();
 
     let bytes = field
         .bytes()

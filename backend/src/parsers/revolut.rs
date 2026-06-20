@@ -1,4 +1,4 @@
-use super::{ParsedTransaction, common};
+use super::{common, ParsedTransaction};
 use chrono::NaiveDate;
 use serde_json::json;
 
@@ -37,7 +37,8 @@ pub fn parse(content: &str) -> Result<Vec<ParsedTransaction>, String> {
     let mut transactions = Vec::new();
 
     for (row_idx, result) in reader.records().enumerate() {
-        let record = result.map_err(|e| format!("CSV parse error at row {}: {}", row_idx + 2, e))?;
+        let record =
+            result.map_err(|e| format!("CSV parse error at row {}: {}", row_idx + 2, e))?;
 
         if record.len() < MIN_COLUMNS {
             tracing::warn!(
@@ -56,16 +57,28 @@ pub fn parse(content: &str) -> Result<Vec<ParsedTransaction>, String> {
         }
 
         // Parse transaction date (first 10 chars of "YYYY-MM-DD HH:MM:SS")
-        let transaction_date = parse_date_prefix(date_str)
-            .map_err(|e| format!("Row {}: invalid transaction date '{}': {}", row_idx + 2, date_str, e))?;
+        let transaction_date = parse_date_prefix(date_str).map_err(|e| {
+            format!(
+                "Row {}: invalid transaction date '{}': {}",
+                row_idx + 2,
+                date_str,
+                e
+            )
+        })?;
 
         // Parse booking date (may be empty)
         let booking_date_str = record.get(COL_DATA_ZREALIZOWANIA).unwrap_or("").trim();
         let booking_date = if booking_date_str.is_empty() {
             None
         } else {
-            Some(parse_date_prefix(booking_date_str)
-                .map_err(|e| format!("Row {}: invalid booking date '{}': {}", row_idx + 2, booking_date_str, e))?)
+            Some(parse_date_prefix(booking_date_str).map_err(|e| {
+                format!(
+                    "Row {}: invalid booking date '{}': {}",
+                    row_idx + 2,
+                    booking_date_str,
+                    e
+                )
+            })?)
         };
 
         let description = common::normalize_whitespace(record.get(COL_OPIS).unwrap_or("").trim());
@@ -109,7 +122,11 @@ pub fn parse(content: &str) -> Result<Vec<ParsedTransaction>, String> {
             currency,
             bank_category: None,
             bank_reference: None,
-            bank_type: if rodzaj.is_empty() { None } else { Some(rodzaj) },
+            bank_type: if rodzaj.is_empty() {
+                None
+            } else {
+                Some(rodzaj)
+            },
             state,
             raw_data,
         });
@@ -203,7 +220,10 @@ mod tests {
 
         // First row: top-up
         assert_eq!(result[0].account, "revolut");
-        assert_eq!(result[0].transaction_date, NaiveDate::from_ymd_opt(2019, 6, 27).unwrap());
+        assert_eq!(
+            result[0].transaction_date,
+            NaiveDate::from_ymd_opt(2019, 6, 27).unwrap()
+        );
         assert_eq!(result[0].amount, Decimal::from_str("20").unwrap());
         assert_eq!(result[0].currency, "PLN");
         assert_eq!(result[0].state, "completed");
@@ -211,15 +231,24 @@ mod tests {
         assert!(result[0].counterparty.is_none()); // top-up, no counterparty
 
         // Second row: card payment
-        assert_eq!(result[1].transaction_date, NaiveDate::from_ymd_opt(2019, 6, 28).unwrap());
-        assert_eq!(result[1].booking_date, Some(NaiveDate::from_ymd_opt(2019, 7, 2).unwrap()));
+        assert_eq!(
+            result[1].transaction_date,
+            NaiveDate::from_ymd_opt(2019, 6, 28).unwrap()
+        );
+        assert_eq!(
+            result[1].booking_date,
+            Some(NaiveDate::from_ymd_opt(2019, 7, 2).unwrap())
+        );
         assert_eq!(result[1].amount, Decimal::from_str("-7.19").unwrap());
         assert_eq!(result[1].description, "Steam");
         assert_eq!(result[1].counterparty.as_deref(), Some("Steam"));
 
         // Third row: transfer with counterparty
         assert_eq!(result[2].amount, Decimal::from_str("-2.5").unwrap());
-        assert_eq!(result[2].counterparty.as_deref(), Some("RAFAL ASMAR SOUDANI"));
+        assert_eq!(
+            result[2].counterparty.as_deref(),
+            Some("RAFAL ASMAR SOUDANI")
+        );
         assert_eq!(result[2].description, "Przelew do: RAFAL ASMAR SOUDANI");
     }
 

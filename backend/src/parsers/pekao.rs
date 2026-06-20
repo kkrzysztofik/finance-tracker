@@ -1,4 +1,4 @@
-use super::{ParsedTransaction, common};
+use super::{common, ParsedTransaction};
 use chrono::NaiveDate;
 use serde_json::json;
 
@@ -49,7 +49,8 @@ pub fn parse(content: &str) -> Result<Vec<ParsedTransaction>, String> {
     let mut transactions = Vec::new();
 
     for (row_idx, result) in reader.records().enumerate() {
-        let record = result.map_err(|e| format!("CSV parse error at row {}: {}", row_idx + 2, e))?;
+        let record =
+            result.map_err(|e| format!("CSV parse error at row {}: {}", row_idx + 2, e))?;
 
         if record.len() < MIN_COLUMNS {
             tracing::warn!(
@@ -67,24 +68,35 @@ pub fn parse(content: &str) -> Result<Vec<ParsedTransaction>, String> {
             continue;
         }
 
-        let transaction_date = NaiveDate::parse_from_str(date_str, "%d.%m.%Y")
-            .map_err(|e| format!("Row {}: invalid transaction date '{}': {}", row_idx + 2, date_str, e))?;
+        let transaction_date = NaiveDate::parse_from_str(date_str, "%d.%m.%Y").map_err(|e| {
+            format!(
+                "Row {}: invalid transaction date '{}': {}",
+                row_idx + 2,
+                date_str,
+                e
+            )
+        })?;
 
         // Booking date is "Data księgowania" (index 0)
         let booking_date_str = record.get(COL_DATA_KSIEGOWANIA).unwrap_or("").trim();
         let booking_date = if booking_date_str.is_empty() {
             None
         } else {
-            Some(NaiveDate::parse_from_str(booking_date_str, "%d.%m.%Y")
-                .map_err(|e| format!("Row {}: invalid booking date '{}': {}", row_idx + 2, booking_date_str, e))?)
+            Some(
+                NaiveDate::parse_from_str(booking_date_str, "%d.%m.%Y").map_err(|e| {
+                    format!(
+                        "Row {}: invalid booking date '{}': {}",
+                        row_idx + 2,
+                        booking_date_str,
+                        e
+                    )
+                })?,
+            )
         };
 
-        let counterparty_raw = common::normalize_whitespace(
-            record.get(COL_NADAWCA_ODBIORCA).unwrap_or("").trim(),
-        );
-        let tytul = common::normalize_whitespace(
-            record.get(COL_TYTUL).unwrap_or("").trim(),
-        );
+        let counterparty_raw =
+            common::normalize_whitespace(record.get(COL_NADAWCA_ODBIORCA).unwrap_or("").trim());
+        let tytul = common::normalize_whitespace(record.get(COL_TYTUL).unwrap_or("").trim());
 
         // Parse amount
         let amount_str = record.get(COL_KWOTA).unwrap_or("").trim();
@@ -194,14 +206,23 @@ mod tests {
 
         // First row: expense
         assert_eq!(result[0].account, "pekao");
-        assert_eq!(result[0].transaction_date, NaiveDate::from_ymd_opt(2026, 2, 23).unwrap());
-        assert_eq!(result[0].booking_date, Some(NaiveDate::from_ymd_opt(2026, 2, 23).unwrap()));
+        assert_eq!(
+            result[0].transaction_date,
+            NaiveDate::from_ymd_opt(2026, 2, 23).unwrap()
+        );
+        assert_eq!(
+            result[0].booking_date,
+            Some(NaiveDate::from_ymd_opt(2026, 2, 23).unwrap())
+        );
         assert_eq!(result[0].amount, Decimal::from_str("-1180.00").unwrap());
         assert_eq!(result[0].currency, "PLN");
         assert_eq!(result[0].state, "completed");
         assert_eq!(result[0].counterparty.as_deref(), Some("Fitness Club"));
         assert_eq!(result[0].description, "Za treningi");
-        assert_eq!(result[0].bank_category.as_deref(), Some("Sport i rekreacja"));
+        assert_eq!(
+            result[0].bank_category.as_deref(),
+            Some("Sport i rekreacja")
+        );
         assert_eq!(result[0].bank_reference.as_deref(), Some("0001234567"));
         assert_eq!(result[0].bank_type.as_deref(), Some("Przelew wychodzący"));
 
