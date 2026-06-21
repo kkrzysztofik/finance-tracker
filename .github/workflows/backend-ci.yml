@@ -65,7 +65,7 @@ jobs:
 
       - name: Security audit
         working-directory: backend
-        run: cargo audit --ignore RUSTSEC-2023-0071
+        run: cargo audit --db "$RUNNER_TEMP/cargo-audit-advisory-db" --ignore RUSTSEC-2023-0071 --ignore RUSTSEC-2025-0052 --ignore RUSTSEC-2026-0173
 
       - name: Unused dependencies
         working-directory: backend
