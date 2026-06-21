@@ -2,12 +2,12 @@
 FROM rust:1.84-bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock* ./
+COPY migration/ migration/
 # Create dummy src for dependency caching
 RUN mkdir src && echo "fn main() {}" > src/main.rs
 RUN cargo build --release
 RUN rm -rf src
 COPY src/ src/
-COPY migrations/ migrations/
 # Touch main.rs to force rebuild
 RUN touch src/main.rs
 RUN cargo build --release

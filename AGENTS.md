@@ -8,7 +8,7 @@ Finance Tracker is a personal finance management application with:
 
 - **Backend**: Rust (Axum, SeaORM, Tokio) – REST API at `/backend/`
 - **Frontend**: Next.js 16 + React 19, TypeScript, Tailwind CSS v4, shadcn/ui – at `/frontend/`
-- **Database**: PostgreSQL (migrations in `backend/migrations/`)
+- **Database**: PostgreSQL (SeaORM migrations in `backend/migration/`)
 - **Infrastructure**: Docker + docker-compose
 
 ## Architecture
@@ -26,7 +26,7 @@ finance-tracker/
 │   │   ├── config.rs # Configuration via env vars
 │   │   ├── db.rs     # Database connection pool
 │   │   └── error.rs  # Centralized error types
-│   └── migrations/   # SQL migrations
+│   └── migration/    # SeaORM migration crate
 └── frontend/         # Next.js App Router
     ├── src/app/      # Pages & layouts (App Router)
     ├── src/components/ # Shared UI components
@@ -80,7 +80,7 @@ npm run dev    # Development server
 
 ### Database
 
-- Schema changes require SQL migrations in `backend/migrations/`
+- Schema changes require SeaORM migrations in `backend/migration/src/`
 - Use SeaORM entities for all queries
 - Add indexes for WHERE/ORDER BY columns
 

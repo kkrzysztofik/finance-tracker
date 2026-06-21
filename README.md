@@ -48,6 +48,9 @@ export DATABASE_URL=postgres://finance:finance@localhost:5432/finance
 cargo run -- serve
 ```
 
+The backend applies pending SeaORM migrations automatically at startup via the
+`migration` crate. Migration history is tracked in the `seaql_migrations` table.
+
 ### Import bank statements
 
 ```bash
@@ -118,12 +121,16 @@ The CSV parser auto-detects format from filename or content headers:
 backend/
 ├── Cargo.toml
 ├── Dockerfile
-├── migrations/
-│   ├── 001_initial_schema.sql
-│   └── 002_seed_categories.sql
+├── migration/
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs
+│       ├── main.rs
+│       ├── m20260621_000001_create_schema.rs
+│       └── m20260621_000002_seed_categories.rs
 └── src/
     ├── main.rs              CLI entry point (serve / import)
-    ├── db.rs                Database connection + migrations
+  ├── db.rs                Database connection + SeaORM migrator runner
     ├── error.rs             AppError type with Axum integration
     ├── config.rs            Environment config
     ├── auth.rs              Basic HTTP auth middleware

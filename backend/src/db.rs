@@ -1,3 +1,4 @@
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tracing::info;
 
@@ -11,18 +12,7 @@ pub async fn create_pool(database_url: &str) -> Result<DatabaseConnection, sea_o
 }
 
 pub async fn run_migrations(db: &DatabaseConnection) -> Result<(), sea_orm::DbErr> {
-    use sea_orm::ConnectionTrait;
-
-    let migrations = [
-        include_str!("../migrations/001_initial_schema.sql"),
-        include_str!("../migrations/002_seed_categories.sql"),
-    ];
-
-    for (i, migration) in migrations.iter().enumerate() {
-        info!("Running migration {}", i + 1);
-        db.execute_unprepared(migration).await?;
-    }
-
-    info!("All migrations completed");
+    Migrator::up(db, None).await?;
+    info!("All migrations are up to date");
     Ok(())
 }
