@@ -61,7 +61,7 @@ jobs:
 
       - name: Dependency policy
         working-directory: backend
-        run: cargo deny --config deny.toml check
+          run: cargo deny check --config deny.toml
 
       - name: Security audit
         working-directory: backend
