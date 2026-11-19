@@ -18,7 +18,7 @@ on:
 jobs:
   frontend:
     name: Frontend Standards
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.RUNS_ON_KMK == 'true' && fromJSON('["self-hosted", "kmk-ai"]') || 'ubuntu-latest' }}
     permissions:
       contents: read
 
@@ -41,7 +41,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Format
         run: npm run format:check
