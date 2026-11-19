@@ -1,0 +1,18 @@
+# Throwaway: proves Chromium launches as the `runner` user with the library set
+# bootstrap.sh installs. Deleted once the answer is known.
+name: playwright smoke
+on: workflow_dispatch
+jobs:
+  launch:
+    runs-on: [self-hosted, kmk-ai]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: |
+          set -euo pipefail
+          mkdir -p /tmp/pw && cd /tmp/pw
+          npm init -y >/dev/null
+          npm i playwright@1.61.0 >/dev/null
+          npx playwright install chromium
+          node -e "const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage();await p.setContent('<title>ok</title>');console.log('TITLE='+await p.title());await b.close()})()"
