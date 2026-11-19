@@ -1,7 +1,9 @@
 # Throwaway: proves Chromium launches as the `runner` user with the library set
 # bootstrap.sh installs. Deleted once the answer is known.
 name: playwright smoke
-on: workflow_dispatch
+on:
+  push:
+    branches: ['ci/kmk-ai-runner']
 jobs:
   launch:
     runs-on: [self-hosted, kmk-ai]
